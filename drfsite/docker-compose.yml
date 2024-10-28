@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+
+  # redis:
+  #   image: redis:alpine
+  #   container_name: redis
+
+  db:
+    image: postgres
+    environment:
+      POSTGRES_DB: test4
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Tashkent@123
+    ports:
+      - "5432:5432"
+  # pgadmin:
+  #     container_name: pgadmin4
+  #     image: dpage/pgadmin4
+  #     restart: always
+  #     environment:
+  #       PGADMIN_DEFAULT_EMAIL: admin@gmail.com
+  #       PGADMIN_DEFAULT_PASSWORD: admin
+  #     ports:
+  #       - "5050:80"
+  app:
+    build: .
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    container_name: django_app
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_NAME=test4
+      - DB_USER=postgres
+      - DB_PASS=Tashkent@123
+
+  redis:
+    image: "redis:alpine"
+  
+  celery_worker:
+    build: .
+    command: celery -A drfsite worker --loglevel=info
+    volumes:
+      - .:/celery
+    depends_on:
+      - redis
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0

@@ -16,12 +16,15 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include, re_path
-from fast_food.views import *
+from orders.views import OrderViewSet
+from food.views import *
+from users.views import *
 from rest_framework import routers, permissions
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView
 from rest_framework.routers import DefaultRouter
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from . import views
 
 schema_view = get_schema_view(
    openapi.Info(
@@ -40,7 +43,8 @@ router = DefaultRouter()
 router.register(r'orders', OrderViewSet, basename='order')
 
 urlpatterns = [
-    path('admin/', admin.site.urls),                      
+    path('admin/', admin.site.urls),     
+    # path('', views.home),                
     path('api/v1/foodlist/', FoodAPIList.as_view()),
     path('api/v1/foodlist/<int:pk>/', FoodAPIUpdate.as_view()),
     path('api/v1/drf-auth/', include('rest_framework.urls')),
