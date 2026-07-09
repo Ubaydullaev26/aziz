@@ -1,0 +1,24 @@
+{
+  "nav": {
+    "map": "Xarita",
+    "search": "Qidiruv",
+    "events": "Tadbirlar",
+    "guides": "Gidlar",
+    "account": "Profil",
+    "signIn": "Kirish",
+    "signUp": "Bepul boshlash"
+  },
+  "hero": {
+    "eyebrow": "Shaharning jonli xaritasi",
+    "title": "Atrofingizda hozir sodir bo'layotgan hamma narsa",
+    "subtitle": "Diqqatga sazovor joylar, gidlar, ekskursiyalar, konsertlar va restoranlar — bitta ilovada.",
+    "searchPlaceholder": "Shaharni tanlang, masalan Samarqand",
+    "cta": "Xaritani ochish",
+    "secondaryCta": "Qanday ishlaydi"
+  },
+  "theme": {
+    "light": "Yorug'",
+    "dark": "Qorong'i",
+    "system": "Tizim"
+  }
+}

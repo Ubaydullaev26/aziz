@@ -1,0 +1,535 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  USER
+  GUIDE
+  ADMIN
+  SUPERADMIN
+}
+
+enum BookingType {
+  TOUR
+  EVENT
+  GUIDE
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum PriceLevel {
+  FREE
+  LOW
+  MEDIUM
+  HIGH
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Auth (Auth.js / NextAuth v5 — Credentials + Google + Apple, JWT sessions)
+// ─────────────────────────────────────────────────────────────────────────
+
+model User {
+  id              String    @id @default(cuid())
+  name            String?
+  email           String    @unique
+  emailVerified   DateTime?
+  passwordHash    String?
+  image           String?
+  phone           String?
+  role            UserRole  @default(USER)
+  locale          String    @default("ru")
+  themePreference String    @default("system")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  accounts       Account[]
+  sessions       Session[]
+  bookings       Booking[]
+  favoritePlaces FavoritePlace[]
+  favoriteEvents FavoriteEvent[]
+  reviews        Review[]
+  guideProfile   Guide?
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Geography — designed so new countries/cities can be added without a
+// redeploy (admin-managed), the core scaling requirement for this product.
+// ─────────────────────────────────────────────────────────────────────────
+
+model Country {
+  id     String @id @default(cuid())
+  code   String @unique // ISO 3166-1 alpha-2, e.g. "UZ"
+  nameRu String
+  nameEn String
+  nameUz String
+
+  cities City[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("countries")
+}
+
+model City {
+  id            String  @id @default(cuid())
+  slug          String  @unique
+  countryId     String
+  nameRu        String
+  nameEn        String
+  nameUz        String
+  descriptionRu String? @db.Text
+  descriptionEn String? @db.Text
+  descriptionUz String? @db.Text
+  coverImage    String?
+  latitude      Float
+  longitude     Float
+  defaultZoom   Float   @default(13)
+  timezone      String  @default("Asia/Samarkand")
+  isPublished   Boolean @default(true)
+
+  country Country @relation(fields: [countryId], references: [id])
+  places  Place[]
+  events  Event[]
+  guides  Guide[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([countryId])
+  @@map("cities")
+}
+
+// Categories are data, not code — admins can add "wine tasting" or
+// "street art" for a new market without touching the codebase.
+model Category {
+  id              String  @id @default(cuid())
+  key             String  @unique // stable machine key, e.g. "historical"
+  nameRu          String
+  nameEn          String
+  nameUz          String
+  icon            String // lucide-react icon name used for the map marker
+  color           String // hex used to theme the marker + badges
+  isEventCategory Boolean @default(false) // true for concert/festival/exhibition/masterclass
+  position        Int     @default(0)
+
+  places Place[]
+  events Event[]
+
+  createdAt DateTime @default(now())
+
+  @@map("categories")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Places (attractions, museums, restaurants, viewpoints, shops, nightlife…)
+// ─────────────────────────────────────────────────────────────────────────
+
+model Place {
+  id                 String     @id @default(cuid())
+  slug               String     @unique
+  cityId             String
+  categoryId         String
+  nameRu             String
+  nameEn             String
+  nameUz             String
+  shortDescriptionRu String?
+  shortDescriptionEn String?
+  shortDescriptionUz String?
+  descriptionRu      String     @db.Text
+  descriptionEn      String     @db.Text
+  descriptionUz      String     @db.Text
+  historyRu          String?    @db.Text
+  historyEn          String?    @db.Text
+  historyUz          String?    @db.Text
+  address            String
+  latitude           Float
+  longitude          Float
+  priceLevel         PriceLevel @default(FREE)
+  priceFrom          Int? // smallest currency unit, e.g. so'm
+  currency           String     @default("UZS")
+  phone              String?
+  website            String?
+  rating             Float      @default(0)
+  reviewCount        Int        @default(0)
+  isFeatured         Boolean    @default(false)
+  isPublished        Boolean    @default(true)
+  coverImage         String
+
+  city         City               @relation(fields: [cityId], references: [id])
+  category     Category           @relation(fields: [categoryId], references: [id])
+  images       PlaceImage[]
+  openingHours PlaceOpeningHour[]
+  guides       Guide[]            @relation("PlaceGuides")
+  tours        Tour[]
+  reviews      Review[]
+  favorites    FavoritePlace[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  events    Event[]
+
+  @@index([cityId])
+  @@index([categoryId])
+  @@map("places")
+}
+
+model PlaceImage {
+  id       String  @id @default(cuid())
+  placeId  String
+  url      String
+  alt      String?
+  position Int     @default(0)
+
+  place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  @@index([placeId])
+  @@map("place_images")
+}
+
+model PlaceOpeningHour {
+  id        String  @id @default(cuid())
+  placeId   String
+  dayOfWeek Int // 0 = Sunday … 6 = Saturday
+  opensAt   String? // "09:00"
+  closesAt  String? // "18:00"
+  isClosed  Boolean @default(false)
+
+  place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  @@unique([placeId, dayOfWeek])
+  @@map("place_opening_hours")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Guides & bookable tours/excursions
+// ─────────────────────────────────────────────────────────────────────────
+
+model Guide {
+  id              String   @id @default(cuid())
+  userId          String?  @unique
+  cityId          String
+  slug            String   @unique
+  name            String
+  avatar          String
+  bioRu           String?  @db.Text
+  bioEn           String?  @db.Text
+  bioUz           String?  @db.Text
+  languages       String[] // ["ru", "en", "uz", "ja"]
+  experienceYears Int      @default(0)
+  pricePerHour    Int?
+  currency        String   @default("UZS")
+  rating          Float    @default(0)
+  reviewCount     Int      @default(0)
+  isVerified      Boolean  @default(false)
+  isPublished     Boolean  @default(true)
+
+  user           User?               @relation(fields: [userId], references: [id])
+  city           City                @relation(fields: [cityId], references: [id])
+  places         Place[]             @relation("PlaceGuides")
+  tours          Tour[]
+  availabilities GuideAvailability[]
+  bookings       Booking[]
+  reviews        Review[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([cityId])
+  @@map("guides")
+}
+
+model GuideAvailability {
+  id          String   @id @default(cuid())
+  guideId     String
+  startAt     DateTime
+  endAt       DateTime
+  capacity    Int      @default(1)
+  bookedCount Int      @default(0)
+  isActive    Boolean  @default(true)
+
+  guide    Guide     @relation(fields: [guideId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+
+  @@index([guideId, startAt])
+  @@map("guide_availabilities")
+}
+
+model Tour {
+  id              String  @id @default(cuid())
+  slug            String  @unique
+  placeId         String?
+  guideId         String?
+  titleRu         String
+  titleEn         String
+  titleUz         String
+  descriptionRu   String  @db.Text
+  descriptionEn   String  @db.Text
+  descriptionUz   String  @db.Text
+  coverImage      String
+  durationMinutes Int
+  price           Int
+  currency        String  @default("UZS")
+  maxGroupSize    Int     @default(10)
+  isPublished     Boolean @default(true)
+
+  place          Place?             @relation(fields: [placeId], references: [id])
+  guide          Guide?             @relation(fields: [guideId], references: [id])
+  availabilities TourAvailability[]
+  bookings       Booking[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([placeId])
+  @@index([guideId])
+  @@map("tours")
+}
+
+model TourAvailability {
+  id          String   @id @default(cuid())
+  tourId      String
+  startAt     DateTime
+  capacity    Int      @default(10)
+  bookedCount Int      @default(0)
+  isActive    Boolean  @default(true)
+
+  tour     Tour      @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+
+  @@index([tourId, startAt])
+  @@map("tour_availabilities")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Events — the "live city" layer. startAt/endAt drive the isLiveNow /
+// startsSoon computation surfaced on the map in real time.
+// ─────────────────────────────────────────────────────────────────────────
+
+model Event {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  cityId        String
+  categoryId    String
+  placeId       String?
+  titleRu       String
+  titleEn       String
+  titleUz       String
+  descriptionRu String   @db.Text
+  descriptionEn String   @db.Text
+  descriptionUz String   @db.Text
+  coverImage    String
+  organizer     String
+  address       String
+  latitude      Float
+  longitude     Float
+  startAt       DateTime
+  endAt         DateTime
+  timezone      String   @default("Asia/Samarkand")
+  isPublished   Boolean  @default(true)
+  isFeatured    Boolean  @default(false)
+  rating        Float    @default(0)
+  reviewCount   Int      @default(0)
+
+  city        City              @relation(fields: [cityId], references: [id])
+  category    Category          @relation(fields: [categoryId], references: [id])
+  place       Place?            @relation(fields: [placeId], references: [id])
+  images      EventImage[]
+  ticketTypes EventTicketType[]
+  bookings    Booking[]
+  reviews     Review[]
+  favorites   FavoriteEvent[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([cityId])
+  @@index([categoryId])
+  @@index([startAt, endAt])
+  @@map("events")
+}
+
+model EventImage {
+  id       String  @id @default(cuid())
+  eventId  String
+  url      String
+  alt      String?
+  position Int     @default(0)
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@map("event_images")
+}
+
+model EventTicketType {
+  id            String @id @default(cuid())
+  eventId       String
+  name          String // "Standard", "VIP"
+  price         Int
+  currency      String @default("UZS")
+  totalQuantity Int
+  soldQuantity  Int    @default(0)
+
+  event    Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+
+  @@index([eventId])
+  @@map("event_ticket_types")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Bookings — one model, three booking "shapes" (tour / event / guide-hour).
+// The paymentIntentId column is the clean seam for a real gateway
+// (Payme/Click locally, or Stripe) — V1 confirms bookings without charging.
+// ─────────────────────────────────────────────────────────────────────────
+
+model Booking {
+  id     String        @id @default(cuid())
+  code   String        @unique @default(cuid())
+  userId String
+  type   BookingType
+  status BookingStatus @default(PENDING)
+
+  tourId              String?
+  tourAvailabilityId  String?
+  eventId             String?
+  eventTicketTypeId   String?
+  guideId             String?
+  guideAvailabilityId String?
+
+  quantity        Int     @default(1)
+  totalPrice      Int
+  currency        String  @default("UZS")
+  contactName     String
+  contactPhone    String
+  notes           String?
+  paymentIntentId String?
+
+  user              User               @relation(fields: [userId], references: [id])
+  tour              Tour?              @relation(fields: [tourId], references: [id])
+  tourAvailability  TourAvailability?  @relation(fields: [tourAvailabilityId], references: [id])
+  event             Event?             @relation(fields: [eventId], references: [id])
+  eventTicketType   EventTicketType?   @relation(fields: [eventTicketTypeId], references: [id])
+  guide             Guide?             @relation(fields: [guideId], references: [id])
+  guideAvailability GuideAvailability? @relation(fields: [guideAvailabilityId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@map("bookings")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Favorites — dedicated join tables (not a polymorphic one) so "my saved
+// places" and "my saved events" are both a plain, type-safe Prisma query.
+// ─────────────────────────────────────────────────────────────────────────
+
+model FavoritePlace {
+  id        String   @id @default(cuid())
+  userId    String
+  placeId   String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  place Place @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, placeId])
+  @@map("favorite_places")
+}
+
+model FavoriteEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  eventId   String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+  @@map("favorite_events")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Reviews — one target of Place / Event / Guide is set per row.
+// ─────────────────────────────────────────────────────────────────────────
+
+model Review {
+  id      String  @id @default(cuid())
+  userId  String
+  placeId String?
+  eventId String?
+  guideId String?
+  rating  Int // 1-5
+  comment String? @db.Text
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  place Place? @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  event Event? @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guide Guide? @relation(fields: [guideId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([placeId])
+  @@index([eventId])
+  @@index([guideId])
+  @@map("reviews")
+}

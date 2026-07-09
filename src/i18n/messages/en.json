@@ -1,0 +1,24 @@
+{
+  "nav": {
+    "map": "Map",
+    "search": "Search",
+    "events": "Events",
+    "guides": "Guides",
+    "account": "Account",
+    "signIn": "Sign in",
+    "signUp": "Get started"
+  },
+  "hero": {
+    "eyebrow": "The city's live map",
+    "title": "Everything happening around you — right now",
+    "subtitle": "Landmarks, guides, tours, concerts and restaurants of a city in one app. No more searching across ten tabs.",
+    "searchPlaceholder": "Pick a city, e.g. Samarkand",
+    "cta": "Open the map",
+    "secondaryCta": "How it works"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  }
+}
