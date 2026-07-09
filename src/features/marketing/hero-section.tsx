@@ -96,7 +96,7 @@ export function HeroSection() {
                 style={{ animationDelay: `${i * 80}ms` }}
               >
                 <Image
-                  src={`https://picsum.photos/seed/${item.seed}/700/700`}
+                  src={`/api/placeholder/${item.seed}?w=700&h=700`}
                   alt=""
                   fill
                   className="object-cover"

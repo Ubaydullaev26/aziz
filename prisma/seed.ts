@@ -3,11 +3,11 @@ import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
-// Deterministic placeholder photography (picsum.photos/seed/* always resolves
-// to a stable image for a given seed string). Swap for real photography via
-// the admin panel — the schema doesn't care where the URL points.
-const img = (seed: string, w = 1200, h = 800) =>
-  `https://picsum.photos/seed/${seed}/${w}/${h}`;
+// Deterministic, locally generated gradient placeholders (see
+// /api/placeholder/[seed]) — no external image CDN dependency. Swap for
+// real photography via the admin panel; the schema doesn't care where the
+// URL points.
+const img = (seed: string, w = 1200, h = 800) => `/api/placeholder/${seed}?w=${w}&h=${h}`;
 
 const hoursFromNow = (h: number) => new Date(Date.now() + h * 60 * 60 * 1000);
 const daysFromNowAt = (days: number, hour: number, minute = 0) => {

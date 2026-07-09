@@ -6,6 +6,11 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 const nextConfig: NextConfig = {
   output: "standalone",
   images: {
+    // Locally generated SVG placeholders (see /api/placeholder) keep the
+    // demo self-contained with no external image CDN dependency.
+    dangerouslyAllowSVG: true,
+    contentDispositionType: "inline",
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "picsum.photos" },
