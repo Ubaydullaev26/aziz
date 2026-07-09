@@ -1,0 +1,135 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 33% 98%;
+    --foreground: 210 24% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 210 24% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 24% 12%;
+
+    --primary: 189 78% 28%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 40 20% 94%;
+    --secondary-foreground: 210 24% 12%;
+
+    --muted: 40 20% 94%;
+    --muted-foreground: 215 12% 42%;
+
+    --accent: 189 60% 94%;
+    --accent-foreground: 189 78% 22%;
+
+    --sunset: 21 90% 55%;
+    --sunset-foreground: 0 0% 100%;
+
+    --destructive: 4 78% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 16% 88%;
+    --input: 210 16% 88%;
+    --ring: 189 78% 28%;
+
+    --radius: 0.9rem;
+  }
+
+  .dark {
+    --background: 213 34% 7%;
+    --foreground: 40 20% 96%;
+
+    --card: 213 30% 10%;
+    --card-foreground: 40 20% 96%;
+
+    --popover: 213 30% 9%;
+    --popover-foreground: 40 20% 96%;
+
+    --primary: 189 70% 48%;
+    --primary-foreground: 213 34% 7%;
+
+    --secondary: 213 24% 15%;
+    --secondary-foreground: 40 20% 96%;
+
+    --muted: 213 24% 15%;
+    --muted-foreground: 215 14% 65%;
+
+    --accent: 213 28% 17%;
+    --accent-foreground: 189 70% 70%;
+
+    --sunset: 21 90% 60%;
+    --sunset-foreground: 213 34% 7%;
+
+    --destructive: 4 70% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 213 22% 18%;
+    --input: 213 22% 18%;
+    --ring: 189 70% 48%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings:
+      "cv02", "cv03", "cv04", "cv11";
+  }
+
+  ::selection {
+    @apply bg-primary/20;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/70 backdrop-blur-xl dark:bg-white/[0.06];
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .glass-panel {
+    @apply glass border border-white/40 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.25)] dark:border-white/10;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .mask-fade-b {
+    mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Mapbox GL base + our overrides for a clean, chrome-free feel */
+.mapboxgl-ctrl-logo {
+  opacity: 0.55;
+}
+.mapboxgl-popup-content {
+  padding: 0 !important;
+  border-radius: 1rem !important;
+  overflow: hidden;
+  box-shadow: 0 12px 40px -8px rgba(0, 0, 0, 0.35) !important;
+}
+.mapboxgl-popup-tip {
+  display: none !important;
+}
+.mapboxgl-ctrl-group {
+  border-radius: 0.75rem !important;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15) !important;
+}
