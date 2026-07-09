@@ -63,6 +63,7 @@
     "react-dom": "^19.2.7",
     "react-hook-form": "^7.81.0",
     "react-map-gl": "^7.1.9",
+    "server-only": "^0.0.1",
     "slugify": "^1.6.9",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.6.0",
