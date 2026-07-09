@@ -34,27 +34,41 @@ function AppleIcon() {
   );
 }
 
-export function OAuthButtons({ callbackUrl = "/map" }: { callbackUrl?: string }) {
+export function OAuthButtons({
+  callbackUrl = "/map",
+  googleEnabled,
+  appleEnabled,
+}: {
+  callbackUrl?: string;
+  googleEnabled: boolean;
+  appleEnabled: boolean;
+}) {
+  if (!googleEnabled && !appleEnabled) return null;
+
   return (
     <div className="grid grid-cols-2 gap-3">
-      <Button
-        type="button"
-        variant="outline"
-        className="w-full"
-        onClick={() => signIn("google", { callbackUrl })}
-      >
-        <GoogleIcon />
-        Google
-      </Button>
-      <Button
-        type="button"
-        variant="outline"
-        className="w-full"
-        onClick={() => signIn("apple", { callbackUrl })}
-      >
-        <AppleIcon />
-        Apple
-      </Button>
+      {googleEnabled && (
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          onClick={() => signIn("google", { callbackUrl })}
+        >
+          <GoogleIcon />
+          Google
+        </Button>
+      )}
+      {appleEnabled && (
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          onClick={() => signIn("apple", { callbackUrl })}
+        >
+          <AppleIcon />
+          Apple
+        </Button>
+      )}
     </div>
   );
 }

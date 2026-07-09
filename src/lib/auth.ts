@@ -9,6 +9,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { loginSchema } from "@/features/auth/schemas";
 import authConfig from "@/lib/auth.config";
+import { getOAuthStatus } from "@/lib/oauth-status";
 
 const providers: Provider[] = [
   Credentials({
@@ -34,20 +35,22 @@ const providers: Provider[] = [
   }),
 ];
 
-if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
+const { googleEnabled, appleEnabled } = getOAuthStatus();
+
+if (googleEnabled) {
   providers.push(
     Google({
-      clientId: process.env.AUTH_GOOGLE_ID,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      clientId: process.env.AUTH_GOOGLE_ID!,
+      clientSecret: process.env.AUTH_GOOGLE_SECRET!,
     }),
   );
 }
 
-if (process.env.AUTH_APPLE_ID && process.env.AUTH_APPLE_SECRET) {
+if (appleEnabled) {
   providers.push(
     Apple({
-      clientId: process.env.AUTH_APPLE_ID,
-      clientSecret: process.env.AUTH_APPLE_SECRET,
+      clientId: process.env.AUTH_APPLE_ID!,
+      clientSecret: process.env.AUTH_APPLE_SECRET!,
     }),
   );
 }
