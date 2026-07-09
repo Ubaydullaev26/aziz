@@ -1,25 +1,20 @@
 "use client";
 
-import * as React from "react";
-import Image from "next/image";
 import Link from "next/link";
-import { Star, Share2, ShieldCheck, Languages, Briefcase, CalendarClock } from "lucide-react";
+import { Star, ShieldCheck, Languages, Briefcase, CalendarClock } from "lucide-react";
 
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGuideDetail } from "@/features/guides/hooks/use-guide-detail";
 import { ReviewSection } from "@/features/reviews/components/review-section";
-import { BookingDialog, type BookingOption } from "@/features/booking/components/booking-dialog";
-import { useShare } from "@/lib/use-share";
+import { GuideBookButton } from "@/features/booking/components/guide-book-button";
+import { ShareButton } from "@/features/guides/components/share-button";
 import { formatPrice, formatDateTime, initials } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function GuideDetailSheet({ slug, onClose }: { slug: string; onClose: () => void }) {
   const { data: guide, isLoading } = useGuideDetail(slug);
-  const share = useShare();
-  const [booking, setBooking] = React.useState(false);
 
   return (
     <Sheet open onOpenChange={(open) => !open && onClose()}>
@@ -69,15 +64,13 @@ export function GuideDetailSheet({ slug, onClose }: { slug: string; onClose: () 
             {guide.bioRu && <p className="text-sm leading-relaxed text-muted-foreground">{guide.bioRu}</p>}
 
             <div className="grid grid-cols-2 gap-2">
-              <Button
-                variant="outline"
-                onClick={() => share({ title: guide.name, path: `/guides/${guide.slug}` })}
-              >
-                <Share2 className="h-4 w-4" /> Поделиться
-              </Button>
-              <Button onClick={() => setBooking(true)} disabled={guide.availabilities.length === 0}>
-                Забронировать
-              </Button>
+              <ShareButton name={guide.name} slug={guide.slug} />
+              <GuideBookButton
+                guideName={guide.name}
+                pricePerHour={guide.pricePerHour}
+                currency={guide.currency}
+                availabilities={guide.availabilities}
+              />
             </div>
 
             {guide.places.length > 0 && (
@@ -128,23 +121,6 @@ export function GuideDetailSheet({ slug, onClose }: { slug: string; onClose: () 
           </div>
         )}
       </SheetContent>
-
-      {guide && booking && (
-        <BookingDialog
-          open={booking}
-          onOpenChange={setBooking}
-          type="GUIDE"
-          title={`Бронирование гида: ${guide.name}`}
-          options={guide.availabilities.map<BookingOption>((a) => ({
-            id: a.id,
-            title: formatDateTime(a.startAt),
-            subtitle: `до ${formatDateTime(a.endAt)}`,
-            remaining: a.capacity - a.bookedCount,
-            priceEach: guide.pricePerHour ?? 0,
-            currency: guide.currency,
-          }))}
-        />
-      )}
     </Sheet>
   );
 }

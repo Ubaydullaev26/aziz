@@ -3,23 +3,20 @@
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Star, MapPin, Share2, Heart, Navigation2, CalendarClock, Ticket, Loader2 } from "lucide-react";
+import { Star, MapPin, CalendarClock, Ticket } from "lucide-react";
 
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEventDetail } from "@/features/events/hooks/use-event-detail";
-import { useFavoriteToggle } from "@/features/favorites/hooks/use-favorite-toggle";
+import { EventActions } from "@/features/events/components/event-actions";
 import { ReviewSection } from "@/features/reviews/components/review-section";
 import { BookingDialog, type BookingOption } from "@/features/booking/components/booking-dialog";
-import { useShare } from "@/lib/use-share";
 import { formatPrice, formatDateTime } from "@/lib/utils";
 
 export function EventDetailSheet({ slug, onClose }: { slug: string; onClose: () => void }) {
   const { data: event, isLoading } = useEventDetail(slug);
-  const favoriteToggle = useFavoriteToggle("EVENT");
-  const share = useShare();
   const [booking, setBooking] = React.useState(false);
 
   return (
@@ -75,41 +72,14 @@ export function EventDetailSheet({ slug, onClose }: { slug: string; onClose: () 
 
               <p className="text-sm text-muted-foreground">Организатор: {event.organizer}</p>
 
-              <div className="grid grid-cols-3 gap-2">
-                <Button variant="outline" className="flex-col gap-1 py-3" asChild>
-                  <a
-                    href={`https://www.google.com/maps/dir/?api=1&destination=${event.latitude},${event.longitude}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <Navigation2 className="h-4 w-4" />
-                    <span className="text-xs">Маршрут</span>
-                  </a>
-                </Button>
-                <Button
-                  variant="outline"
-                  className="flex-col gap-1 py-3"
-                  onClick={() =>
-                    share({ title: event.titleRu, text: event.descriptionRu.slice(0, 100), path: `/events/${event.slug}` })
-                  }
-                >
-                  <Share2 className="h-4 w-4" />
-                  <span className="text-xs">Поделиться</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  className="flex-col gap-1 py-3"
-                  disabled={favoriteToggle.isPending}
-                  onClick={() => favoriteToggle.mutate(event.id)}
-                >
-                  {favoriteToggle.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Heart className="h-4 w-4" />
-                  )}
-                  <span className="text-xs">Сохранить</span>
-                </Button>
-              </div>
+              <EventActions
+                id={event.id}
+                slug={event.slug}
+                titleRu={event.titleRu}
+                descriptionRu={event.descriptionRu}
+                latitude={event.latitude}
+                longitude={event.longitude}
+              />
 
               <p className="text-sm leading-relaxed text-muted-foreground">{event.descriptionRu}</p>
 

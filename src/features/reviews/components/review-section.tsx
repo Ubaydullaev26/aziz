@@ -15,7 +15,7 @@ type ReviewItem = {
   id: string;
   rating: number;
   comment: string | null;
-  createdAt: string;
+  createdAt: string | Date;
   user: { name: string | null; image: string | null };
 };
 

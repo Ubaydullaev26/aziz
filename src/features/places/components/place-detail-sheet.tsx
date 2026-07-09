@@ -3,17 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  Star,
-  MapPin,
-  Clock,
-  Share2,
-  Heart,
-  Navigation2,
-  Languages,
-  ShieldCheck,
-  Loader2,
-} from "lucide-react";
+import { Star, MapPin, Clock, Languages, ShieldCheck } from "lucide-react";
 
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
@@ -21,19 +11,16 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePlaceDetail } from "@/features/places/hooks/use-place-detail";
-import { useFavoriteToggle } from "@/features/favorites/hooks/use-favorite-toggle";
+import { PlaceActions } from "@/features/places/components/place-actions";
 import { ReviewSection } from "@/features/reviews/components/review-section";
 import { BookingDialog, type BookingOption } from "@/features/booking/components/booking-dialog";
 import { useMapStore } from "@/features/map/store";
-import { useShare } from "@/lib/use-share";
 import { cn, formatPrice, formatDateTime } from "@/lib/utils";
 
 const DAY_NAMES = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
 
 export function PlaceDetailSheet({ slug, onClose }: { slug: string; onClose: () => void }) {
   const { data: place, isLoading } = usePlaceDetail(slug);
-  const favoriteToggle = useFavoriteToggle("PLACE");
-  const share = useShare();
   const select = useMapStore((s) => s.select);
   const [bookingTour, setBookingTour] = React.useState<{
     title: string;
@@ -91,45 +78,14 @@ export function PlaceDetailSheet({ slug, onClose }: { slug: string; onClose: () 
                 )}
               </div>
 
-              <div className="grid grid-cols-3 gap-2">
-                <Button
-                  variant="outline"
-                  className="flex-col gap-1 py-3"
-                  asChild
-                >
-                  <a
-                    href={`https://www.google.com/maps/dir/?api=1&destination=${place.latitude},${place.longitude}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <Navigation2 className="h-4 w-4" />
-                    <span className="text-xs">Маршрут</span>
-                  </a>
-                </Button>
-                <Button
-                  variant="outline"
-                  className="flex-col gap-1 py-3"
-                  onClick={() =>
-                    share({ title: place.nameRu, text: place.descriptionRu.slice(0, 100), path: `/places/${place.slug}` })
-                  }
-                >
-                  <Share2 className="h-4 w-4" />
-                  <span className="text-xs">Поделиться</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  className="flex-col gap-1 py-3"
-                  disabled={favoriteToggle.isPending}
-                  onClick={() => favoriteToggle.mutate(place.id)}
-                >
-                  {favoriteToggle.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Heart className="h-4 w-4" />
-                  )}
-                  <span className="text-xs">Сохранить</span>
-                </Button>
-              </div>
+              <PlaceActions
+                id={place.id}
+                slug={place.slug}
+                nameRu={place.nameRu}
+                descriptionRu={place.descriptionRu}
+                latitude={place.latitude}
+                longitude={place.longitude}
+              />
 
               <Tabs defaultValue="description">
                 <TabsList>

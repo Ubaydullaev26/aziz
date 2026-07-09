@@ -14,6 +14,7 @@ const badgeVariants = cva(
         sunset: "border-transparent bg-sunset text-sunset-foreground",
         live: "border-transparent bg-sunset/15 text-sunset dark:text-sunset",
         success: "border-transparent bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+        destructive: "border-transparent bg-destructive/15 text-destructive",
       },
     },
     defaultVariants: {
