@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { AdminPageHeader } from "@/features/admin/components/admin-page-header";
 import { DataTable, type Column } from "@/features/admin/components/data-table";
 import { ConfirmDeleteButton } from "@/features/admin/components/confirm-delete-button";
+import { ImportEventsButton } from "@/features/admin/components/import-events-button";
 import { deleteEvent } from "@/features/admin/events/actions";
 import { getEventTiming } from "@/features/events/utils";
 import { Button } from "@/components/ui/button";
@@ -68,11 +69,14 @@ export default async function AdminEventsPage() {
         title="События"
         description="Концерты, фестивали, выставки и мастер-классы — живой слой карты"
         actions={
-          <Button asChild>
-            <Link href="/admin/events/new">
-              <Plus className="h-4 w-4" /> Добавить событие
-            </Link>
-          </Button>
+          <div className="flex gap-2">
+            <ImportEventsButton />
+            <Button asChild>
+              <Link href="/admin/events/new">
+                <Plus className="h-4 w-4" /> Добавить событие
+              </Link>
+            </Button>
+          </div>
         }
       />
       <DataTable columns={columns} rows={events} />

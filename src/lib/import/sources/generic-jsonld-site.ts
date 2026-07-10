@@ -1,0 +1,135 @@
+import { fetchHtml, sleep } from "../fetch-html";
+import { guessCity } from "../cities";
+import {
+  extractJsonLdEvents,
+  schemaAddress,
+  schemaImageUrl,
+  schemaOrganizer,
+  type SchemaEvent,
+} from "../jsonld";
+import type { ImportCityKey, NormalizedEvent, SourceResult } from "../types";
+
+export interface JsonLdSiteConfig {
+  source: string;
+  organizerFallback: string;
+  defaultCity: ImportCityKey;
+  /** Category/listing pages to start discovery from. */
+  listingUrls: string[];
+  /** Matches href values that look like an individual event's detail page. */
+  detailUrlPattern: RegExp;
+  /** Absolute-ize a possibly-relative href found on the listing page. */
+  resolveUrl: (href: string) => string;
+  /** Safety cap on detail pages fetched per run — keeps us within the
+   *  serverless function's time budget and off the site's radar. */
+  maxDetailPages?: number;
+}
+
+function extractDetailLinks(html: string, config: JsonLdSiteConfig): string[] {
+  const hrefs = new Set<string>();
+  const hrefRe = /href=["']([^"']+)["']/gi;
+  let match: RegExpExecArray | null;
+  while ((match = hrefRe.exec(html))) {
+    const href = match[1];
+    if (href && config.detailUrlPattern.test(href)) {
+      hrefs.add(config.resolveUrl(href));
+    }
+  }
+  return [...hrefs];
+}
+
+function toNormalizedEvent(
+  schemaEvent: SchemaEvent,
+  url: string,
+  config: JsonLdSiteConfig,
+): NormalizedEvent | null {
+  if (!schemaEvent.name || !schemaEvent.startDate) return null;
+  const startAt = new Date(schemaEvent.startDate);
+  if (Number.isNaN(startAt.getTime())) return null;
+
+  const endAt = schemaEvent.endDate ? new Date(schemaEvent.endDate) : null;
+  const address = schemaAddress(schemaEvent.location);
+  const cityGuess =
+    guessCity(`${schemaEvent.location?.name ?? ""} ${address ?? ""} ${schemaEvent.name}`) ??
+    config.defaultCity;
+
+  const geo = schemaEvent.location?.geo;
+  const latitude = geo?.latitude !== undefined ? Number(geo.latitude) : null;
+  const longitude = geo?.longitude !== undefined ? Number(geo.longitude) : null;
+
+  return {
+    source: config.source,
+    externalId: url,
+    sourceUrl: url,
+    city: cityGuess,
+    titleRu: schemaEvent.name.slice(0, 200),
+    descriptionRu: schemaEvent.description?.trim() || schemaEvent.name,
+    organizer: schemaOrganizer(schemaEvent.organizer) ?? config.organizerFallback,
+    venueName: schemaEvent.location?.name ?? null,
+    address,
+    latitude: latitude !== null && !Number.isNaN(latitude) ? latitude : null,
+    longitude: longitude !== null && !Number.isNaN(longitude) ? longitude : null,
+    startAt,
+    endAt: endAt && !Number.isNaN(endAt.getTime()) ? endAt : null,
+    coverImage: schemaImageUrl(schemaEvent.image),
+    categoryKey: "concert",
+  };
+}
+
+/**
+ * Generic engine for sites that publish Schema.org Event JSON-LD (nearly
+ * universal for ticketing platforms, since it drives Google's event rich
+ * results). Two-pass: pull events straight off listing pages when present,
+ * then fall back to following individual event links for sites that only
+ * mark up the detail page.
+ */
+export async function fetchJsonLdSiteEvents(config: JsonLdSiteConfig): Promise<SourceResult> {
+  const events: NormalizedEvent[] = [];
+  const errors: string[] = [];
+  const seenUrls = new Set<string>();
+  const detailLinks = new Set<string>();
+
+  for (const listingUrl of config.listingUrls) {
+    const page = await fetchHtml(listingUrl);
+    if (!page.ok) {
+      errors.push(page.error);
+      continue;
+    }
+
+    for (const schemaEvent of extractJsonLdEvents(page.html)) {
+      const url = typeof schemaEvent.url === "string" ? schemaEvent.url : listingUrl;
+      if (seenUrls.has(url)) continue;
+      const normalized = toNormalizedEvent(schemaEvent, url, config);
+      if (normalized) {
+        seenUrls.add(url);
+        events.push(normalized);
+      }
+    }
+
+    for (const link of extractDetailLinks(page.html, config)) {
+      detailLinks.add(link);
+    }
+    await sleep(300);
+  }
+
+  const cap = config.maxDetailPages ?? 25;
+  for (const url of [...detailLinks].slice(0, cap)) {
+    if (seenUrls.has(url)) continue;
+    const detail = await fetchHtml(url);
+    if (!detail.ok) {
+      errors.push(detail.error);
+      continue;
+    }
+    const schemaEvents = extractJsonLdEvents(detail.html);
+    const primary = schemaEvents[0];
+    if (primary) {
+      const normalized = toNormalizedEvent(primary, url, config);
+      if (normalized) {
+        seenUrls.add(url);
+        events.push(normalized);
+      }
+    }
+    await sleep(300);
+  }
+
+  return { source: config.source, events, errors };
+}
