@@ -9,15 +9,18 @@ import { MapView } from "@/features/map/components/map-view";
 import { FilterPanel } from "@/features/map/components/filter-panel";
 import { LiveFeedPanel } from "@/features/map/components/live-feed-panel";
 import { EntityDetailSheet } from "@/features/map/components/entity-detail-sheet";
+import { CitySwitcher, type CityOption } from "@/features/map/components/city-switcher";
 
 export function MapShell({
   citySlug,
   center,
   zoom,
+  cities,
 }: {
   citySlug: string;
   center: { latitude: number; longitude: number };
   zoom: number;
+  cities: CityOption[];
 }) {
   const { activeCategories, toursOnly, showGuides } = useMapStore();
   const { data: placesData, isLoading: placesLoading } = usePlaces(citySlug);
@@ -51,6 +54,7 @@ export function MapShell({
     <div className="relative h-full w-full">
       <MapView center={center} zoom={zoom} places={places} events={events} guides={guides} />
       <FilterPanel />
+      <CitySwitcher cities={cities} activeCitySlug={citySlug} />
       <LiveFeedPanel events={eventsData?.events ?? []} />
       <EntityDetailSheet />
 

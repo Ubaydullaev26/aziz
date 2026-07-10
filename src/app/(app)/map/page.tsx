@@ -13,9 +13,16 @@ export default async function MapPage({
 }) {
   const { city: citySlugParam } = await searchParams;
 
-  const city = citySlugParam
-    ? await prisma.city.findUnique({ where: { slug: citySlugParam } })
-    : await prisma.city.findFirst({ where: { isPublished: true }, orderBy: { createdAt: "asc" } });
+  const [city, cities] = await Promise.all([
+    citySlugParam
+      ? prisma.city.findUnique({ where: { slug: citySlugParam } })
+      : prisma.city.findFirst({ where: { isPublished: true }, orderBy: { createdAt: "asc" } }),
+    prisma.city.findMany({
+      where: { isPublished: true },
+      select: { slug: true, nameRu: true },
+      orderBy: { nameRu: "asc" },
+    }),
+  ]);
 
   if (!city) notFound();
 
@@ -24,6 +31,7 @@ export default async function MapPage({
       citySlug={city.slug}
       center={{ latitude: city.latitude, longitude: city.longitude }}
       zoom={city.defaultZoom}
+      cities={cities}
     />
   );
 }
