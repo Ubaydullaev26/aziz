@@ -11,7 +11,7 @@
 - **UI:** TailwindCSS, самописный shadcn-style UI-кит на Radix UI, Framer Motion
 - **База данных:** PostgreSQL + Prisma ORM
 - **Авторизация:** Auth.js v5 — Credentials (JWT), Google OAuth, Apple Sign In
-- **Карта:** Mapbox GL JS (react-map-gl)
+- **Карта:** MapLibre GL JS (react-map-gl) + бесплатные тайлы OpenStreetMap (CARTO), без API-ключа
 - **Состояние/данные:** Zustand (фильтры карты), TanStack Query (кэш запросов)
 - **i18n:** next-intl (ru / en / uz)
 - **Инфраструктура:** Docker + docker-compose (Postgres + приложение)
@@ -106,7 +106,6 @@ npm run dev
 | `AUTH_SECRET` | да | секрет для подписи JWT (Auth.js) |
 | `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | нет | Google OAuth; без них кнопка Google просто не подключена |
 | `AUTH_APPLE_ID` / `AUTH_APPLE_SECRET` | нет | Apple Sign In; `AUTH_APPLE_SECRET` — это подписанный JWT, генерируется отдельным скриптом Apple |
-| `NEXT_PUBLIC_MAPBOX_TOKEN` | нет | без токена карта показывает аккуратный fallback вместо интерактивной карты |
 
 ## Тестовые аккаунты (после `db:seed`)
 

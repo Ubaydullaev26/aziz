@@ -7,16 +7,29 @@ import Map, {
   GeolocateControl,
   type MapRef,
   type ViewStateChangeEvent,
-} from "react-map-gl";
+} from "react-map-gl/maplibre";
 import { useTheme } from "next-themes";
-import "mapbox-gl/dist/mapbox-gl.css";
+import "maplibre-gl/dist/maplibre-gl.css";
 
 import { useMapStore } from "@/features/map/store";
 import { PlacePin, EventPin, GuidePin } from "@/features/map/components/marker-pins";
-import { MapUnavailable } from "@/features/map/components/map-unavailable";
 import type { MapPlace, MapEvent, MapGuide } from "@/features/map/hooks/use-map-data";
 
-const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+// Free raster tiles derived from OpenStreetMap data, no API key required.
+// https://github.com/CartoDB/basemap-styles
+const OSM_STYLE = (variant: "light_all" | "dark_all") => ({
+  version: 8 as const,
+  sources: {
+    osm: {
+      type: "raster" as const,
+      tiles: [`https://basemaps.cartocdn.com/${variant}/{z}/{x}/{y}{r}.png`],
+      tileSize: 256,
+      attribution: "© OpenStreetMap contributors © CARTO",
+      maxzoom: 20,
+    },
+  },
+  layers: [{ id: "osm", type: "raster" as const, source: "osm" }],
+});
 
 export function MapView({
   center,
@@ -44,19 +57,14 @@ export function MapView({
     });
   }, [flyToRequest]);
 
-  const mapStyle =
-    resolvedTheme === "dark"
-      ? "mapbox://styles/mapbox/dark-v11"
-      : "mapbox://styles/mapbox/light-v11";
-
-  if (!MAPBOX_TOKEN) {
-    return <MapUnavailable />;
-  }
+  const mapStyle = React.useMemo(
+    () => OSM_STYLE(resolvedTheme === "dark" ? "dark_all" : "light_all"),
+    [resolvedTheme],
+  );
 
   return (
     <Map
       ref={mapRef}
-      mapboxAccessToken={MAPBOX_TOKEN}
       initialViewState={{ latitude: center.latitude, longitude: center.longitude, zoom }}
       mapStyle={mapStyle}
       style={{ width: "100%", height: "100%" }}
