@@ -25,8 +25,10 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "iticket.uz" },
       { protocol: "https", hostname: "*.iticket.uz" },
       { protocol: "https", hostname: "img.evbuc.com" },
-      { protocol: "https", hostname: "cdn-telegram.org" },
-      { protocol: "https", hostname: "*.cdn-telegram.org" },
+      // Telegram's web-preview photo CDN — confirmed from a live import
+      // run (cdn4.telesco.pe), not the cdn-telegram.org guess it replaces.
+      { protocol: "https", hostname: "telesco.pe" },
+      { protocol: "https", hostname: "*.telesco.pe" },
     ],
   },
   eslint: {
