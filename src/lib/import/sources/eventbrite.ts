@@ -21,5 +21,10 @@ export async function fetchEventbriteEvents(): Promise<SourceResult> {
     detailUrlPattern: /\/e\/[a-z0-9-]+-tickets-\d+/i,
     resolveUrl: (href) => new URL(href, "https://www.eventbrite.com").toString(),
     maxDetailPages: 20,
+    // Eventbrite is a global platform — if its Tashkent/Samarkand discovery
+    // page has few local listings it may fall back to showing unrelated
+    // events from elsewhere. Without this, those would get silently
+    // mislabeled as happening in Uzbekistan via `defaultCity`.
+    requireCityMatch: true,
   });
 }

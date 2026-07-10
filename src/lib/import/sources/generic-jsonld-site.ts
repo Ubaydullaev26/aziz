@@ -22,6 +22,15 @@ export interface JsonLdSiteConfig {
   /** Safety cap on detail pages fetched per run — keeps us within the
    *  serverless function's time budget and off the site's radar. */
   maxDetailPages?: number;
+  /**
+   * When true, events whose address/venue text doesn't clearly mention
+   * Tashkent or Samarkand are dropped instead of falling back to
+   * `defaultCity`. Uzbekistan-only platforms (iticket/afisha) can safely
+   * default every event to Tashkent — global platforms like Eventbrite
+   * cannot, or an unrelated event anywhere in the world silently gets
+   * mislabeled as happening in Uzbekistan.
+   */
+  requireCityMatch?: boolean;
 }
 
 function extractDetailLinks(html: string, config: JsonLdSiteConfig): string[] {
@@ -48,20 +57,27 @@ function toNormalizedEvent(
 
   const endAt = schemaEvent.endDate ? new Date(schemaEvent.endDate) : null;
   const address = schemaAddress(schemaEvent.location);
-  const cityGuess =
-    guessCity(`${schemaEvent.location?.name ?? ""} ${address ?? ""} ${schemaEvent.name}`) ??
-    config.defaultCity;
+  const cityMatch = guessCity(
+    `${schemaEvent.location?.name ?? ""} ${address ?? ""} ${schemaEvent.name}`,
+  );
+  if (!cityMatch && config.requireCityMatch) return null; // e.g. a global Eventbrite listing with no Uzbekistan match
+  const cityGuess = cityMatch ?? config.defaultCity;
 
   const geo = schemaEvent.location?.geo;
   const latitude = geo?.latitude !== undefined ? Number(geo.latitude) : null;
   const longitude = geo?.longitude !== undefined ? Number(geo.longitude) : null;
+
+  // Ticketing sites often set the JSON-LD `name` to a full SEO title, e.g.
+  // "Артист — купить билеты на концерт в Ташкенте ... — Афиша Ташкента" —
+  // keep just the leading event name.
+  const cleanTitle = schemaEvent.name.split(" — ")[0]?.trim() || schemaEvent.name;
 
   return {
     source: config.source,
     externalId: url,
     sourceUrl: url,
     city: cityGuess,
-    titleRu: schemaEvent.name.slice(0, 200),
+    titleRu: cleanTitle.slice(0, 200),
     descriptionRu: schemaEvent.description?.trim() || schemaEvent.name,
     organizer: schemaOrganizer(schemaEvent.organizer) ?? config.organizerFallback,
     venueName: schemaEvent.location?.name ?? null,

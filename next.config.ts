@@ -18,6 +18,15 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "res.cloudinary.com" },
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
       { protocol: "https", hostname: "avatars.githubusercontent.com" },
+      // Cover images pulled in by the real-event import pipeline
+      // (src/lib/import) — each source hosts posters on its own domain.
+      { protocol: "https", hostname: "afisha.uz" },
+      { protocol: "https", hostname: "*.afisha.uz" },
+      { protocol: "https", hostname: "iticket.uz" },
+      { protocol: "https", hostname: "*.iticket.uz" },
+      { protocol: "https", hostname: "img.evbuc.com" },
+      { protocol: "https", hostname: "cdn-telegram.org" },
+      { protocol: "https", hostname: "*.cdn-telegram.org" },
     ],
   },
   eslint: {
