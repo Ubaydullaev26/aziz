@@ -11,6 +11,7 @@ export async function fetchAfishaEvents(): Promise<SourceResult> {
     source: "afisha",
     organizerFallback: "Afisha.uz",
     defaultCity: "tashkent",
+    siteHost: "afisha.uz",
     listingUrls: [
       "https://www.afisha.uz/ru/calendar",
       "https://www.afisha.uz/ru/concerts",
@@ -26,5 +27,9 @@ export async function fetchAfishaEvents(): Promise<SourceResult> {
       if (/\/ru\/exhibitions?\//i.test(url)) return "exhibition";
       return "concert";
     },
+    // iticket.uz turned out to link cross-border to a sister site in
+    // another country — apply the same caution here even though it
+    // wasn't directly observed for afisha.uz.
+    requireCityMatch: true,
   });
 }

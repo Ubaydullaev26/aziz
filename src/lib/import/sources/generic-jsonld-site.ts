@@ -15,6 +15,14 @@ export interface JsonLdSiteConfig {
   defaultCity: ImportCityKey;
   /** Category/listing pages to start discovery from. */
   listingUrls: string[];
+  /**
+   * The site's own hostname (e.g. "iticket.uz"). Links whose resolved host
+   * isn't this or a subdomain of it are dropped — a listing page can and
+   * does link out to other domains (iticket.uz linked to a Baku festival
+   * on iticket.az, a related but separate country's site), and a bare
+   * path-shaped regex has no way to tell those apart from the real thing.
+   */
+  siteHost: string;
   /** Matches href values that look like an individual event's detail page. */
   detailUrlPattern: RegExp;
   /** Absolute-ize a possibly-relative href found on the listing page. */
@@ -39,15 +47,24 @@ export interface JsonLdSiteConfig {
   categoryKey: NormalizedEvent["categoryKey"] | ((url: string) => NormalizedEvent["categoryKey"]);
 }
 
+function isOnSite(url: string, siteHost: string): boolean {
+  try {
+    const host = new URL(url).hostname;
+    return host === siteHost || host.endsWith(`.${siteHost}`);
+  } catch {
+    return false;
+  }
+}
+
 function extractDetailLinks(html: string, config: JsonLdSiteConfig): string[] {
   const hrefs = new Set<string>();
   const hrefRe = /href=["']([^"']+)["']/gi;
   let match: RegExpExecArray | null;
   while ((match = hrefRe.exec(html))) {
     const href = match[1];
-    if (href && config.detailUrlPattern.test(href)) {
-      hrefs.add(config.resolveUrl(href));
-    }
+    if (!href || !config.detailUrlPattern.test(href)) continue;
+    const resolved = config.resolveUrl(href);
+    if (isOnSite(resolved, config.siteHost)) hrefs.add(resolved);
   }
   return [...hrefs];
 }
@@ -119,7 +136,7 @@ export async function fetchJsonLdSiteEvents(config: JsonLdSiteConfig): Promise<S
 
     for (const schemaEvent of extractJsonLdEvents(page.html)) {
       const url = typeof schemaEvent.url === "string" ? schemaEvent.url : listingUrl;
-      if (seenUrls.has(url)) continue;
+      if (seenUrls.has(url) || !isOnSite(url, config.siteHost)) continue;
       const normalized = toNormalizedEvent(schemaEvent, url, config);
       if (normalized) {
         seenUrls.add(url);

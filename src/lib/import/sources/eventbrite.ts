@@ -14,6 +14,7 @@ export async function fetchEventbriteEvents(): Promise<SourceResult> {
     source: "eventbrite",
     organizerFallback: "Eventbrite",
     defaultCity: "tashkent",
+    siteHost: "eventbrite.com",
     listingUrls: [
       "https://www.eventbrite.com/d/uzbekistan--tashkent/events/",
       "https://www.eventbrite.com/d/uzbekistan--samarkand/events/",
