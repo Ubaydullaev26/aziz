@@ -1,13 +1,28 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { Radio, Sparkles } from "lucide-react";
 
 import { CitySearch } from "@/features/search/components/city-search";
 import { Badge } from "@/components/ui/badge";
+import { getEventTiming } from "@/features/events/utils";
 
-const COLLAGE = [
+export interface HeroEvent {
+  id: string;
+  slug: string;
+  titleRu: string;
+  coverImage: string;
+  address: string;
+  startAt: Date;
+  endAt: Date;
+}
+
+// Decorative fallback for when there's no real event with a real photo yet
+// (e.g. a brand-new environment before the first import run) — otherwise
+// the hero would render an empty grid.
+const PLACEHOLDER_COLLAGE = [
   { seed: "registan-hero", className: "col-span-2 row-span-2" },
   { seed: "shahi-zinda-hero", className: "" },
   { seed: "bazaar-hero", className: "" },
@@ -15,7 +30,26 @@ const COLLAGE = [
   { seed: "food-hero", className: "" },
 ];
 
-export function HeroSection() {
+function startsInLabel(event: HeroEvent): string {
+  const timing = getEventTiming(event.startAt, event.endAt);
+  if (timing.isLiveNow) return "Сейчас идёт";
+  const minutes = Math.round((new Date(event.startAt).getTime() - Date.now()) / 60_000);
+  if (minutes < 60) return `Начинается через ${minutes} мин`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `Начинается через ${hours} ч`;
+  return new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "long" }).format(
+    new Date(event.startAt),
+  );
+}
+
+export function HeroSection({ events }: { events: HeroEvent[] }) {
+  const collage =
+    events.length > 0
+      ? events
+          .slice(0, 5)
+          .map((e, i) => ({ ...e, className: i === 0 ? "col-span-2 row-span-2" : "" }))
+      : null;
+  const badgeEvent = events[0];
   return (
     <section className="relative overflow-hidden pb-20 pt-16 sm:pt-24">
       <div
@@ -89,33 +123,56 @@ export function HeroSection() {
           className="relative hidden sm:block"
         >
           <div className="grid h-[440px] grid-cols-2 gap-3">
-            {COLLAGE.map((item, i) => (
-              <div
-                key={item.seed}
-                className={`relative overflow-hidden rounded-3xl shadow-lg ${item.className}`}
-                style={{ animationDelay: `${i * 80}ms` }}
-              >
-                <Image
-                  src={`/api/placeholder/${item.seed}?w=700&h=700`}
-                  alt=""
-                  fill
-                  className="object-cover"
-                  sizes="(min-width: 1024px) 320px, 50vw"
-                  priority={i === 0}
-                />
+            {collage
+              ? collage.map((event, i) => (
+                  <Link
+                    key={event.id}
+                    href={`/events/${event.slug}`}
+                    className={`relative overflow-hidden rounded-3xl shadow-lg ${event.className}`}
+                    style={{ animationDelay: `${i * 80}ms` }}
+                  >
+                    <Image
+                      src={event.coverImage}
+                      alt={event.titleRu}
+                      fill
+                      className="object-cover"
+                      sizes="(min-width: 1024px) 320px, 50vw"
+                      priority={i === 0}
+                    />
+                  </Link>
+                ))
+              : PLACEHOLDER_COLLAGE.map((item, i) => (
+                  <div
+                    key={item.seed}
+                    className={`relative overflow-hidden rounded-3xl shadow-lg ${item.className}`}
+                    style={{ animationDelay: `${i * 80}ms` }}
+                  >
+                    <Image
+                      src={`/api/placeholder/${item.seed}?w=700&h=700`}
+                      alt=""
+                      fill
+                      className="object-cover"
+                      sizes="(min-width: 1024px) 320px, 50vw"
+                      priority={i === 0}
+                    />
+                  </div>
+                ))}
+          </div>
+          {badgeEvent && (
+            <Link
+              href={`/events/${badgeEvent.slug}`}
+              className="glass-panel absolute -bottom-6 -left-6 flex items-center gap-3 rounded-2xl p-4 transition-transform hover:-translate-y-0.5"
+            >
+              <span className="relative flex h-2.5 w-2.5 shrink-0">
+                <span className="absolute inline-flex h-full w-full animate-pulse-live rounded-full bg-sunset" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-sunset" />
+              </span>
+              <div>
+                <p className="line-clamp-1 text-sm font-semibold">{startsInLabel(badgeEvent)}</p>
+                <p className="line-clamp-1 text-xs text-muted-foreground">{badgeEvent.titleRu}</p>
               </div>
-            ))}
-          </div>
-          <div className="glass-panel absolute -bottom-6 -left-6 flex items-center gap-3 rounded-2xl p-4">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="absolute inline-flex h-full w-full animate-pulse-live rounded-full bg-sunset" />
-              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-sunset" />
-            </span>
-            <div>
-              <p className="text-sm font-semibold">Концерт начинается через 40 мин</p>
-              <p className="text-xs text-muted-foreground">на площади Регистан</p>
-            </div>
-          </div>
+            </Link>
+          )}
         </motion.div>
       </div>
     </section>

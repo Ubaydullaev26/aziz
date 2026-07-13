@@ -35,7 +35,7 @@ export async function LiveNowSection() {
               Живой город
             </p>
             <h2 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-              Сейчас в Самарканде
+              Сейчас в городе
             </h2>
           </div>
           <p className="max-w-sm text-sm text-muted-foreground">
