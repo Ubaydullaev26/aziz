@@ -29,6 +29,8 @@ const nextConfig: NextConfig = {
       // run (cdn4.telesco.pe), not the cdn-telegram.org guess it replaces.
       { protocol: "https", hostname: "telesco.pe" },
       { protocol: "https", hostname: "*.telesco.pe" },
+      { protocol: "https", hostname: "gtickets.uz" },
+      { protocol: "https", hostname: "*.gtickets.uz" },
     ],
   },
   eslint: {

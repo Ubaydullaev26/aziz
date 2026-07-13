@@ -10,7 +10,10 @@ export const CITY_CENTERS: Record<ImportCityKey, { latitude: number; longitude: 
 
 const CITY_HINTS: Record<ImportCityKey, RegExp> = {
   tashkent: /ташкент|toshkent|tashkent/i,
-  samarkand: /самарканд|samarqand|samarkand/i,
+  // Landmark names that unambiguously place a venue in Samarkand even when
+  // the city name itself isn't spelled out (e.g. a venue address of just
+  // "Площадь Регистан" — a real gtickets.uz example).
+  samarkand: /самарканд|samarqand|samarkand|регистан|registan|шахи-?зинда|shah-?i-?zinda|гур-?эмир|gur-?emir/i,
 };
 
 /** Best-effort city guess from free-text (address, title, description). */

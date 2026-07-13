@@ -1,8 +1,10 @@
-// Shared, polite fetch used by every source adapter: identifies itself with
-// a real UA (some sites block the default Node/undici UA), times out
-// instead of hanging the serverless function, and never throws — callers
-// check `ok` and log `error` into the source's error list instead of
-// letting one bad page abort the whole import run.
+// Shared, polite fetch used by every source adapter: identifies with an
+// ordinary browser UA (a self-identifying bot UA got served an emptier
+// page by at least one source's WAF — a plain fetch() with no UA at all
+// fares even worse), times out instead of hanging the serverless
+// function, and never throws — callers check `ok` and log `error` into
+// the source's error list instead of letting one bad page abort the
+// whole import run.
 
 export async function fetchHtml(
   url: string,
@@ -15,7 +17,7 @@ export async function fetchHtml(
       signal: controller.signal,
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (compatible; AzizEventBot/1.0; +https://aziz-eta-eight.vercel.app)",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
         Accept: "text/html,application/xhtml+xml",
       },
     });
