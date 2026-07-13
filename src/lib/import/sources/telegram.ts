@@ -77,7 +77,13 @@ export async function fetchTelegramEvents(): Promise<SourceResult> {
       const styleAttr = photo.attr("style") ?? "";
       const imageMatch = /background-image:url\('([^']+)'\)/.exec(styleAttr);
 
-      const city = guessCity(text) ?? "tashkent"; // aydatuda skews Tashkent-heavy
+      // aydatuda posts about events across the wider region, not just
+      // Uzbekistan (a Baku festival slipped through and got mislabeled
+      // "Tashkent" before this was a hard requirement instead of a
+      // default) — skip anything that doesn't explicitly mention Tashkent
+      // or Samarkand rather than guessing.
+      const city = guessCity(text);
+      if (!city) return;
       const firstLine = text.split("\n")[0]?.slice(0, 140) || "Анонс из Aydatuda";
 
       events.push({
