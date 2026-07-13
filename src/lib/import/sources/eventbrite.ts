@@ -26,5 +26,6 @@ export async function fetchEventbriteEvents(): Promise<SourceResult> {
     // events from elsewhere. Without this, those would get silently
     // mislabeled as happening in Uzbekistan via `defaultCity`.
     requireCityMatch: true,
+    categoryKey: "concert",
   });
 }

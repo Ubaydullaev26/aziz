@@ -9,6 +9,21 @@ const CITY_SEED: Record<ImportCityKey, { nameRu: string; nameEn: string; nameUz:
   tashkent: { nameRu: "Ташкент", nameEn: "Tashkent", nameUz: "Toshkent", defaultZoom: 12 },
 };
 
+// Categories the original seed didn't cover but import sources need
+// (gtickets.uz splits theater/sport out from concerts). Auto-created on
+// first use — "categories are data, not code" is the app's own principle.
+const CATEGORY_SEED: Record<
+  NormalizedEvent["categoryKey"],
+  { nameRu: string; nameEn: string; nameUz: string; icon: string; color: string; position: number }
+> = {
+  concert: { nameRu: "Концерты", nameEn: "Concerts", nameUz: "Konsertlar", icon: "Music", color: "#EC4899", position: 9 },
+  festival: { nameRu: "Фестивали", nameEn: "Festivals", nameUz: "Festivallar", icon: "PartyPopper", color: "#F59E0B", position: 10 },
+  exhibition: { nameRu: "Выставки", nameEn: "Exhibitions", nameUz: "Ko'rgazmalar", icon: "Image", color: "#14B8A6", position: 11 },
+  masterclass: { nameRu: "Мастер-классы", nameEn: "Masterclasses", nameUz: "Master-klasslar", icon: "Palette", color: "#EF4444", position: 12 },
+  theater: { nameRu: "Театр", nameEn: "Theater", nameUz: "Teatr", icon: "Drama", color: "#8B5CF6", position: 13 },
+  sport: { nameRu: "Спорт", nameEn: "Sports", nameUz: "Sport", icon: "Trophy", color: "#16A34A", position: 14 },
+};
+
 const cityIdCache = new Map<ImportCityKey, string>();
 const categoryIdCache = new Map<string, string>();
 
@@ -49,10 +64,12 @@ async function getCityId(city: ImportCityKey): Promise<string> {
 async function getCategoryId(key: NormalizedEvent["categoryKey"]): Promise<string> {
   const cached = categoryIdCache.get(key);
   if (cached) return cached;
-  const category = await prisma.category.findUnique({ where: { key } });
-  if (!category) {
-    throw new Error(`Category "${key}" not seeded — run db:seed first`);
-  }
+  const seed = CATEGORY_SEED[key];
+  const category = await prisma.category.upsert({
+    where: { key },
+    update: {},
+    create: { key, isEventCategory: true, ...seed },
+  });
   categoryIdCache.set(key, category.id);
   return category.id;
 }

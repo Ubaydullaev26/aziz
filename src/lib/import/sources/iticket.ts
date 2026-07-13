@@ -19,5 +19,6 @@ export async function fetchITicketEvents(): Promise<SourceResult> {
     detailUrlPattern: /\/ru\/events?\/[a-z0-9-]+\/[a-z0-9-]+/i,
     resolveUrl: (href) => new URL(href, "https://iticket.uz").toString(),
     maxDetailPages: 20,
+    categoryKey: "concert",
   });
 }

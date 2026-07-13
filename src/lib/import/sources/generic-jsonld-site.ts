@@ -31,6 +31,12 @@ export interface JsonLdSiteConfig {
    * mislabeled as happening in Uzbekistan.
    */
   requireCityMatch?: boolean;
+  /**
+   * Category to file discovered events under. Sites that split by section
+   * (e.g. gtickets.uz's /concerts, /theaters, /sports) can pass a function
+   * keyed off the source URL instead of a single fixed category.
+   */
+  categoryKey: NormalizedEvent["categoryKey"] | ((url: string) => NormalizedEvent["categoryKey"]);
 }
 
 function extractDetailLinks(html: string, config: JsonLdSiteConfig): string[] {
@@ -87,7 +93,7 @@ function toNormalizedEvent(
     startAt,
     endAt: endAt && !Number.isNaN(endAt.getTime()) ? endAt : null,
     coverImage: schemaImageUrl(schemaEvent.image),
-    categoryKey: "concert",
+    categoryKey: typeof config.categoryKey === "function" ? config.categoryKey(url) : config.categoryKey,
   };
 }
 

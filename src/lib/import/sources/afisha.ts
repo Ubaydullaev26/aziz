@@ -19,5 +19,12 @@ export async function fetchAfishaEvents(): Promise<SourceResult> {
     detailUrlPattern: /\/ru\/[a-z]+\/\d{4}\/\d{2}\/\d{2}\/[a-z0-9-]+/i,
     resolveUrl: (href) => new URL(href, "https://www.afisha.uz").toString(),
     maxDetailPages: 20,
+    // The URL segment right after /ru/ is afisha's own section
+    // (concerts/theatres/standup/exhibitions/...) — reuse it.
+    categoryKey: (url) => {
+      if (/\/ru\/(theatres|standup)\//i.test(url)) return "theater";
+      if (/\/ru\/exhibitions?\//i.test(url)) return "exhibition";
+      return "concert";
+    },
   });
 }

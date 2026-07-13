@@ -13,6 +13,8 @@ import {
   Palette,
   Compass,
   Users,
+  Drama,
+  Trophy,
   type LucideIcon,
 } from "lucide-react";
 
@@ -31,6 +33,8 @@ export const CATEGORY_ICONS: Record<string, LucideIcon> = {
   Palette,
   Compass,
   Users,
+  Drama,
+  Trophy,
 };
 
 export function getCategoryIcon(name: string): LucideIcon {

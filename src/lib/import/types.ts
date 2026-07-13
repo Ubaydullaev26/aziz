@@ -19,7 +19,7 @@ export interface NormalizedEvent {
   startAt: Date;
   endAt: Date | null;
   coverImage: string | null;
-  categoryKey: "concert" | "festival" | "exhibition" | "masterclass";
+  categoryKey: "concert" | "festival" | "exhibition" | "masterclass" | "theater" | "sport";
 }
 
 export interface SourceResult {

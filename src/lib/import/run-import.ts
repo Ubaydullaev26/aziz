@@ -2,6 +2,7 @@ import { fetchTelegramEvents } from "./sources/telegram";
 import { fetchITicketEvents } from "./sources/iticket";
 import { fetchAfishaEvents } from "./sources/afisha";
 import { fetchEventbriteEvents } from "./sources/eventbrite";
+import { fetchGTicketsEvents } from "./sources/gtickets";
 import { upsertNormalizedEvent } from "./upsert";
 import type { ImportSummary, SourceResult, SourceSummary } from "./types";
 
@@ -53,6 +54,7 @@ export async function runImport(): Promise<ImportSummary> {
     runSource(fetchITicketEvents),
     runSource(fetchAfishaEvents),
     runSource(fetchEventbriteEvents),
+    runSource(fetchGTicketsEvents),
   ]);
 
   return { startedAt, finishedAt: new Date().toISOString(), sources };
